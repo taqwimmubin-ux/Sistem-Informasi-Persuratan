@@ -1,0 +1,6 @@
+{
+  "name": "Sistem Informasi Persuratan SMPIT Bunayya",
+  "description": "Sistem Informasi Manajemen Persuratan (Surat Masuk, Surat Keluar, Disposisi Digital, dan Laporan Arsip) SMPIT Bunayya",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
