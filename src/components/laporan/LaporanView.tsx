@@ -12,6 +12,7 @@ import {
   Building,
 } from 'lucide-react';
 import { SuratMasuk, SuratKeluar, KategoriSurat, ProfilSekolah } from '../../types';
+import { StorageService } from '../../services/storage';
 
 interface LaporanViewProps {
   suratMasukList: SuratMasuk[];
@@ -32,6 +33,15 @@ export const LaporanView: React.FC<LaporanViewProps> = ({
   const [selectedKategori, setSelectedKategori] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [showPrintModal, setShowPrintModal] = useState(false);
+
+  const adminUser = useMemo(() => {
+    return (
+      StorageService.getUsers().find((u) => u.role === 'admin') || {
+        nama: 'Ustadz Muhammad Ramadhan, S.Pd., M.Pd.',
+        nip: '19890415 201202 2 003',
+      }
+    );
+  }, []);
 
   // Filtered incoming
   const filteredMasuk = useMemo(() => {
@@ -448,8 +458,8 @@ export const LaporanView: React.FC<LaporanViewProps> = ({
                   <p>Depok, {endDate}</p>
                   <p className="font-bold">Kepala Tata Usaha</p>
                   <div className="h-16"></div>
-                  <p className="font-bold underline">Ustadzah Fatimah Azzahra, S.Kom</p>
-                  <p className="text-[11px] text-slate-600">NIP. 19890415 201202 2 003</p>
+                  <p className="font-bold underline">{adminUser.nama}</p>
+                  <p className="text-[11px] text-slate-600">NIP. {adminUser.nip || '-'}</p>
                 </div>
               </div>
             </div>

@@ -5,11 +5,17 @@ export type UserRole =
   | 'waka_kesiswaan'
   | 'waka_guru_staf';
 
+export type JenisKelamin = 'Laki-laki' | 'Perempuan';
+
 export interface User {
   id: string;
   username: string;
   password?: string;
+  passwordHash?: string;
+  passwordSalt?: string;
+  mustChangePassword?: boolean;
   nama: string;
+  jenisKelamin: JenisKelamin;
   nip?: string;
   jabatan: string;
   role: UserRole;

@@ -10,9 +10,9 @@ Aplikasi menyediakan 5 peran (roles) lengkap sesuai struktur organisasi sekolah:
 
 | Peran (Role) | Username | Password Default | Nama Pengguna | Tugas & Hak Akses |
 | :--- | :--- | :--- | :--- | :--- |
-| **Admin / Operator TU** | `admin` | `bunayya2026` | Ustadzah Fatimah Azzahra, S.Kom | CRUD surat masuk/keluar, disposisi, kelola user, master data, profil & logo sekolah, audit log, prestasi. |
-| **Kepala Sekolah** | `kepsek` | `bunayya2026` | Dr. H. Ahmad Ridwan, M.Pd.I | Monitoring seluruh surat, pembuatan lembar disposisi instruksi dinas, persetujuan/penolakan surat keluar. |
-| **Waka Kurikulum** | `waka_kurikulum` | `bunayya2026` | Ustadz Syahrul Ramadhan, M.Pd. | Menerima disposisi bidang kurikulum & asesmen, update status tindak lanjut, memberikan tanggapan. |
+| **Admin / Operator TU** | `admin` | `bunayya2026` | Ustadz Muhammad Ramadhan, S.Pd., M.Pd. | CRUD surat masuk/keluar, disposisi, kelola user, master data, profil & logo sekolah, audit log, prestasi. |
+| **Kepala Sekolah** | `kepsek` | `bunayya2026` | Sa'id Ramadhan, S.E., M.M., Gr., Al-Hafidz | Monitoring seluruh surat, pembuatan lembar disposisi instruksi dinas, persetujuan/penolakan surat keluar. |
+| **Waka Kurikulum** | `waka_kurikulum` | `bunayya2026` | Saumiana, S.Pd., Gr. | Menerima disposisi bidang kurikulum & asesmen, update status tindak lanjut, memberikan tanggapan. |
 | **Waka Kesiswaan** | `waka_kesiswaan` | `bunayya2026` | Ustadzah Nurul Hidayah, S.Pd. | Menerima disposisi kesiswaan & perlombaan, update status tindak lanjut, memberikan tanggapan. |
 | **Waka Guru & Staf** | `waka_guru_staf` | `bunayya2026` | Ustadz Ridho Pratama, S.Si. | Menerima disposisi sarpras & OSIS, update status tindak lanjut, memberikan tanggapan. |
 

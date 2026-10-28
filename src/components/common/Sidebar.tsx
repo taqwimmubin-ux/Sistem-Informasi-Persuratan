@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { User, Disposisi, SuratKeluar, ProfilSekolah } from '../../types';
+import { formatNamaPanggilan } from '../../utils/userUtils';
 
 interface SidebarProps {
   currentTab: string;
@@ -76,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: isStaffRole ? 'Tugas Disposisi Saya' : 'Disposisi Surat',
       icon: Send,
       badge: myPendingDisposisi > 0 ? myPendingDisposisi : null,
-      badgeColor: 'bg-amber-400 text-amber-950 font-bold animate-pulse',
+      badgeColor: 'bg-[var(--theme-accent-gold)] text-stone-950 font-bold',
     },
     {
       id: 'surat-keluar',
@@ -134,16 +135,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile backdrop */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 lg:hidden"
+          className="fixed inset-0 bg-stone-950/60 backdrop-blur-xs z-40 lg:hidden"
           onClick={onCloseMobile}
         />
       )}
 
-      {/* Sidebar container with dynamic theme gradient */}
+      {/* Sidebar container with luxury Islamic deep gradient */}
       <aside
         style={{
           background:
-            'linear-gradient(180deg, var(--theme-sidebar-start, #0f172a) 0%, var(--theme-sidebar-mid, #064e3b) 50%, var(--theme-sidebar-end, #022c22) 100%)',
+            'linear-gradient(180deg, var(--theme-sidebar-start, #0F1A17) 0%, var(--theme-sidebar-mid, #152E26) 55%, var(--theme-sidebar-end, #0B1412) 100%)',
         }}
         className={`no-print fixed top-0 bottom-0 left-0 z-40 w-72 text-white flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
@@ -160,26 +161,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
           />
           <button
             onClick={onCloseMobile}
-            className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 lg:hidden cursor-pointer"
+            className="p-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 lg:hidden cursor-pointer transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* User Card inside Sidebar */}
-        <div className="px-5 py-3.5 mx-3 mt-3 rounded-xl bg-white/10 border border-white/10 backdrop-blur-xs flex items-center gap-3">
+        <div className="px-4 py-3 mx-3 mt-3.5 rounded-2xl bg-white/[0.06] border border-[var(--theme-accent-gold)]/20 backdrop-blur-xs flex items-center gap-3 shadow-xs">
           <img
             src={currentUser.avatar}
             alt={currentUser.nama}
-            className="w-10 h-10 rounded-full object-cover ring-2 ring-white/30 shrink-0"
+            className="w-10 h-10 rounded-full object-cover ring-2 ring-[var(--theme-accent-gold)]/60 shrink-0"
           />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-white truncate">{currentUser.nama}</p>
-            <p className="text-[11px] text-white/80 truncate">{currentUser.jabatan}</p>
+            <p className="text-xs font-semibold text-white truncate" title={formatNamaPanggilan(currentUser)}>
+              {formatNamaPanggilan(currentUser)}
+            </p>
+            <p className="text-[11px] text-stone-300 truncate" title={currentUser.jabatan}>
+              {currentUser.jabatan}
+            </p>
             <div className="mt-1">
               <span
-                className="inline-block px-2 py-0.5 rounded text-[10px] font-bold text-white border border-white/20"
-                style={{ backgroundColor: 'rgba(var(--theme-primary-rgb, 5, 150, 105), 0.35)' }}
+                className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold text-white border border-white/15"
+                style={{ backgroundColor: 'rgba(var(--theme-primary-rgb, 47, 111, 94), 0.55)' }}
               >
                 {currentUser.role === 'admin'
                   ? 'Admin / Operator'
@@ -199,7 +204,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
           {/* Main Menu Navigation */}
           <div>
-            <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-white/60">
+            <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-stone-400/90 font-serif-luxury">
               Menu Utama
             </div>
             <nav className="space-y-1">
@@ -218,23 +223,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           }
                         : {}
                     }
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer ${
                       isActive
-                        ? 'text-white font-semibold'
-                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        ? 'text-white font-semibold border-l-4 border-[var(--theme-accent-gold)]'
+                        : 'text-stone-300 hover:text-white hover:bg-white/[0.08]'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <Icon
-                        className="w-4 h-4 shrink-0"
-                        style={isActive ? { color: '#ffffff' } : { color: 'var(--theme-primary-light, #a7f3d0)' }}
+                        className="w-4 h-4 shrink-0 transition-colors"
+                        style={isActive ? { color: '#ffffff' } : { color: 'var(--theme-primary-light, #E8F1ED)' }}
                       />
                       <span>{item.label}</span>
                     </div>
                     {item.badge !== null && (
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          isActive ? 'bg-white text-slate-900' : item.badgeColor
+                          isActive ? 'bg-white text-stone-900' : item.badgeColor
                         }`}
                       >
                         {item.badge}
@@ -249,9 +254,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Admin System Management */}
           {currentUser.role === 'admin' && (
             <div>
-              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-white/60 flex items-center justify-between">
+              <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-stone-400/90 flex items-center justify-between font-serif-luxury">
                 <span>Manajemen Sistem</span>
-                <span className="text-[9px] px-1.5 py-0.2 bg-white/20 text-white rounded font-bold">
+                <span className="text-[9px] px-1.5 py-0.2 bg-[var(--theme-accent-gold)]/25 text-[var(--theme-accent-gold)] rounded-full font-bold border border-[var(--theme-accent-gold)]/40">
                   Admin
                 </span>
               </div>
@@ -271,15 +276,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             }
                           : {}
                       }
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer ${
                         isActive
-                          ? 'text-white font-semibold'
-                          : 'text-slate-300 hover:text-white hover:bg-white/10'
+                          ? 'text-white font-semibold border-l-4 border-[var(--theme-accent-gold)]'
+                          : 'text-stone-300 hover:text-white hover:bg-white/[0.08]'
                       }`}
                     >
                       <Icon
                         className="w-4 h-4 shrink-0"
-                        style={isActive ? { color: '#ffffff' } : { color: 'var(--theme-primary-light, #a7f3d0)' }}
+                        style={isActive ? { color: '#ffffff' } : { color: 'var(--theme-primary-light, #E8F1ED)' }}
                       />
                       <span>{item.label}</span>
                     </button>
@@ -291,12 +296,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Non-admin restricted badge notice if waka/guru/kepsek */}
           {currentUser.role !== 'admin' && (
-            <div className="mx-1 p-3 rounded-xl bg-white/5 border border-white/5 text-[11px] text-slate-300">
-              <div className="flex items-center gap-1.5 text-white font-medium mb-1">
-                <Lock className="w-3.5 h-3.5 text-amber-300" />
+            <div className="mx-1 p-3 rounded-2xl bg-white/[0.04] border border-white/5 text-[11px] text-stone-300">
+              <div className="flex items-center gap-1.5 text-stone-200 font-medium mb-1">
+                <Lock className="w-3.5 h-3.5 text-[var(--theme-accent-gold)]" />
                 Akses Peran Terbatas
               </div>
-              <p className="text-[10px] leading-relaxed text-slate-300/80">
+              <p className="text-[10px] leading-relaxed text-stone-400">
                 Menu konfigurasi instansi, format surat, dan kelola pengguna dikelola oleh Admin TU.
               </p>
             </div>
@@ -304,9 +309,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* School Footer Branding */}
-        <div className="p-4 border-t border-white/10 text-center text-[10px] text-white/70">
-          <div className="font-semibold">{sekolah.namaSekolah}</div>
-          <div className="text-[9px] text-white/50 mt-0.5">Versi Sistem Persuratan Digital 2.5</div>
+        <div className="p-4 border-t border-white/10 text-center text-[10px] text-stone-300">
+          <div className="font-semibold text-white/90">{sekolah.namaSekolah}</div>
+          <div className="text-[9px] text-stone-400 mt-0.5">Sistem Informasi Persuratan Digital • Edisi Premium</div>
         </div>
       </aside>
     </>

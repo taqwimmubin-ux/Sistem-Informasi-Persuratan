@@ -9,6 +9,7 @@ import {
   Notifikasi,
   Prestasi,
   StatusSuratKeluar,
+  JenisKelamin,
 } from '../types';
 import {
   INITIAL_SEKOLAH,
@@ -22,6 +23,8 @@ import {
   INITIAL_PRESTASI,
 } from '../data/seedData';
 import { IndexedDBStorage } from './indexedDbStorage';
+import { AuthService } from './authService';
+import { bersihkanNama } from '../utils/userUtils';
 
 const KEYS = {
   USERS: 'bny_users_v2',
@@ -35,6 +38,160 @@ const KEYS = {
   NOTIFIKASI: 'bny_notifikasi_v2',
   PRESTASI: 'bny_prestasi_v2',
 };
+
+const MIGRATION_KEY = 'bny_migration_v3_personel_names';
+
+// Automatic Personnel & Account Name Migration for Browser Storage
+function runPersonelNameMigration(): void {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    const migrated = localStorage.getItem(MIGRATION_KEY);
+    if (migrated === 'v3_done') return;
+
+    const replacements = [
+      {
+        oldStr: 'Dr. H. Ahmad Ridwan, M.Pd.I',
+        newStr: "Sa'id Ramadhan, S.E., M.M., Gr., Al-Hafidz",
+      },
+      {
+        oldStr: 'Ustadzah Fatimah Azzahra, S.Kom',
+        newStr: 'Ustadz Muhammad Ramadhan, S.Pd., M.Pd.',
+      },
+      {
+        oldStr: 'Ustadz Syahrul Ramadhan, M.Pd.',
+        newStr: 'Saumiana, S.Pd., Gr.',
+      },
+      {
+        oldStr: 'fatimah.tu@smpitbunayya.sch.id',
+        newStr: 'ramadhan.tu@smpitbunayya.sch.id',
+      },
+      {
+        oldStr: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+        newStr: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+      },
+      {
+        oldStr: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+        newStr: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+      },
+      {
+        oldStr: 'Ustadz Syahrul tolong koordinasi',
+        newStr: 'Ustadzah Saumiana tolong koordinasi',
+      },
+    ];
+
+    const storageKeys = Object.values(KEYS);
+    for (const key of storageKeys) {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        let updated = raw;
+        let modified = false;
+        for (const item of replacements) {
+          if (updated.includes(item.oldStr)) {
+            updated = updated.replaceAll(item.oldStr, item.newStr);
+            modified = true;
+          }
+        }
+        if (modified) {
+          localStorage.setItem(key, updated);
+        }
+      }
+    }
+
+    localStorage.setItem(MIGRATION_KEY, 'v3_done');
+  } catch (err) {
+    console.error('Error running personnel name migration:', err);
+  }
+}
+
+// Run migration immediately upon loading
+runPersonelNameMigration();
+
+const AUTH_MIGRATION_KEY = 'bny_migration_v6_gender_sapaan_2026';
+
+// Automatic Auth, Clean Names & Gender Migration (v6)
+function runAuthAccountsMigration(): void {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    const migrated = localStorage.getItem(AUTH_MIGRATION_KEY);
+    if (migrated === 'v6_done') return;
+
+    const raw = localStorage.getItem(KEYS.USERS);
+    let users: User[] = raw ? JSON.parse(raw) : [...INITIAL_USERS];
+
+    // Remove legacy demo users: waka_kesiswaan and waka_guru_staf
+    users = users.filter(
+      (u) =>
+        u.username !== 'waka_kesiswaan' &&
+        u.username !== 'waka_guru_staf' &&
+        u.id !== 'usr-4' &&
+        u.id !== 'usr-5'
+    );
+
+    // Update canonical 3 seed accounts to new username, new SHA-256 hashed passwords, clean names & gender
+    users = users.map((u) => {
+      let seedMatch: User | undefined;
+      if (u.id === 'usr-1' || u.role === 'admin' || u.username.toLowerCase() === 'admin' || u.username.toLowerCase() === 'admin123') {
+        seedMatch = INITIAL_USERS[0];
+      } else if (u.id === 'usr-2' || u.role === 'kepala_sekolah' || u.username.toLowerCase() === 'kepsek' || u.username.toLowerCase() === 'kepala sekolah') {
+        seedMatch = INITIAL_USERS[1];
+      } else if (u.id === 'usr-3' || u.role === 'waka_kurikulum' || u.username.toLowerCase() === 'kurikulum' || u.username.toLowerCase() === 'waka kurikulum' || u.username.toLowerCase() === 'waka_kurikulum') {
+        seedMatch = INITIAL_USERS[2];
+      }
+
+      if (seedMatch) {
+        return {
+          ...u,
+          id: seedMatch.id,
+          username: seedMatch.username, // 'Admin123', 'Kepala sekolah', 'Waka kurikulum'
+          nama: seedMatch.nama,
+          jenisKelamin: seedMatch.jenisKelamin, // 'Laki-laki' / 'Perempuan'
+          jabatan: seedMatch.jabatan,
+          role: seedMatch.role,
+          passwordSalt: seedMatch.passwordSalt,
+          passwordHash: seedMatch.passwordHash,
+          mustChangePassword: false,
+          aktif: true,
+        };
+      }
+      delete (u as any).password;
+      return {
+        ...u,
+        nama: bersihkanNama(u.nama),
+        jenisKelamin: u.jenisKelamin || 'Laki-laki',
+      };
+    });
+
+    // Ensure all 3 canonical seed users exist
+    for (const seed of INITIAL_USERS) {
+      if (!users.some((u) => u.id === seed.id || u.role === seed.role)) {
+        users.push(seed);
+      }
+    }
+
+    localStorage.setItem(KEYS.USERS, JSON.stringify(users));
+
+    const curRaw = localStorage.getItem(KEYS.CURRENT_USER);
+    if (curRaw) {
+      try {
+        const curUser: User = JSON.parse(curRaw);
+        const match = users.find((u) => u.id === curUser.id || u.role === curUser.role);
+        if (match) {
+          localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(match));
+        } else {
+          localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(INITIAL_USERS[0]));
+        }
+      } catch {
+        localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(INITIAL_USERS[0]));
+      }
+    }
+
+    localStorage.setItem(AUTH_MIGRATION_KEY, 'v6_done');
+  } catch (err) {
+    console.error('Error running auth migration v6:', err);
+  }
+}
+
+runAuthAccountsMigration();
 
 function getLocal<T>(key: string, defaultValue: T): T {
   try {
@@ -58,8 +215,24 @@ function setLocal<T>(key: string, value: T): void {
 export const StorageService = {
   // Current logged in user
   getCurrentUser(): User {
+    runPersonelNameMigration();
     const user = getLocal<User | null>(KEYS.CURRENT_USER, null);
-    if (user) return user;
+    if (user) {
+      // Ensure user name is updated if old name was cached
+      if (user.nama === 'Ustadzah Fatimah Azzahra, S.Kom') {
+        user.nama = 'Ustadz Muhammad Ramadhan, S.Pd., M.Pd.';
+        user.avatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80';
+        setLocal(KEYS.CURRENT_USER, user);
+      } else if (user.nama === 'Dr. H. Ahmad Ridwan, M.Pd.I') {
+        user.nama = "Sa'id Ramadhan, S.E., M.M., Gr., Al-Hafidz";
+        setLocal(KEYS.CURRENT_USER, user);
+      } else if (user.nama === 'Ustadz Syahrul Ramadhan, M.Pd.') {
+        user.nama = 'Saumiana, S.Pd., Gr.';
+        user.avatar = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80';
+        setLocal(KEYS.CURRENT_USER, user);
+      }
+      return user;
+    }
     const defaultUser = INITIAL_USERS[0];
     setLocal(KEYS.CURRENT_USER, defaultUser);
     return defaultUser;
@@ -72,7 +245,28 @@ export const StorageService = {
 
   // Users Management
   getUsers(): User[] {
-    return getLocal<User[]>(KEYS.USERS, INITIAL_USERS);
+    runPersonelNameMigration();
+    runAuthAccountsMigration();
+    const users = getLocal<User[]>(KEYS.USERS, INITIAL_USERS);
+    let changed = false;
+    for (const u of users) {
+      if (u.nama === 'Ustadzah Fatimah Azzahra, S.Kom') {
+        u.nama = 'Ustadz Muhammad Ramadhan, S.Pd., M.Pd.';
+        u.avatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80';
+        changed = true;
+      } else if (u.nama === 'Dr. H. Ahmad Ridwan, M.Pd.I') {
+        u.nama = "Sa'id Ramadhan, S.E., M.M., Gr., Al-Hafidz";
+        changed = true;
+      } else if (u.nama === 'Ustadz Syahrul Ramadhan, M.Pd.') {
+        u.nama = 'Saumiana, S.Pd., Gr.';
+        u.avatar = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80';
+        changed = true;
+      }
+    }
+    if (changed) {
+      setLocal(KEYS.USERS, users);
+    }
+    return users;
   },
 
   saveUsers(users: User[]): void {
@@ -83,64 +277,59 @@ export const StorageService = {
     return this.getUsers().find((u) => u.id === id);
   },
 
-  addUser(newUser: Omit<User, 'id'>): { success: boolean; message: string; user?: User } {
+  async addUser(
+    newUser: Omit<User, 'id' | 'password' | 'passwordHash' | 'passwordSalt'>,
+    initialPassword: string
+  ): Promise<{ success: boolean; message: string; user?: User }> {
     const users = this.getUsers();
-    // Validate unique username
-    if (users.some((u) => u.username.toLowerCase() === newUser.username.toLowerCase())) {
+    // Validate unique username (case-insensitive & whitespace trimmed)
+    const normalizedNew = newUser.username.trim().replace(/\s+/g, ' ').toLowerCase();
+    if (users.some((u) => u.username.trim().replace(/\s+/g, ' ').toLowerCase() === normalizedNew)) {
       return { success: false, message: 'Username sudah digunakan oleh akun lain.' };
     }
     // Validate password
-    if (newUser.password && newUser.password.length < 8) {
-      return { success: false, message: 'Kata sandi minimal harus 8 karakter.' };
+    if (!initialPassword || initialPassword.length < 8) {
+      return { success: false, message: 'Kata sandi awal minimal harus 8 karakter.' };
     }
+
+    const salt = AuthService.generateSalt();
+    const hash = await AuthService.hashPassword(initialPassword, salt);
 
     const created: User = {
       ...newUser,
+      nama: bersihkanNama(newUser.nama),
+      jenisKelamin: newUser.jenisKelamin || 'Laki-laki',
+      username: newUser.username.trim(),
       id: `usr-${Date.now()}`,
-      password: newUser.password || 'bunayya2026',
+      passwordSalt: salt,
+      passwordHash: hash,
+      mustChangePassword: true,
+      aktif: true,
     };
     users.push(created);
     this.saveUsers(users);
-    this.addLog('CREATE_USER', 'Pengguna', `Menambahkan pengguna baru: ${created.nama} (${created.jabatan})`);
+    this.addLog('CREATE_USER', 'Pengguna', `Menambahkan pengguna baru: ${created.nama} (@${created.username})`);
     return { success: true, message: 'Pengguna baru berhasil ditambahkan.', user: created };
   },
 
-  updateUser(id: string, updates: Partial<User>): { success: boolean; message: string; user?: User } {
-    const users = this.getUsers();
-    const idx = users.findIndex((u) => u.id === id);
-    if (idx === -1) return { success: false, message: 'Pengguna tidak ditemukan.' };
-
-    if (updates.username && updates.username.toLowerCase() !== users[idx].username.toLowerCase()) {
-      if (users.some((u) => u.id !== id && u.username.toLowerCase() === updates.username?.toLowerCase())) {
-        return { success: false, message: 'Username baru sudah digunakan oleh pengguna lain.' };
-      }
-    }
-
-    if (updates.password && updates.password.length < 8) {
-      return { success: false, message: 'Kata sandi minimal 8 karakter.' };
-    }
-
-    users[idx] = { ...users[idx], ...updates };
-    this.saveUsers(users);
-
-    const currentUser = this.getCurrentUser();
-    if (currentUser.id === id) {
-      setLocal(KEYS.CURRENT_USER, users[idx]);
-    }
-
-    this.addLog('UPDATE_USER', 'Pengguna', `Memperbarui data pengguna: ${users[idx].nama}`);
-    return { success: true, message: 'Data pengguna berhasil diperbarui.', user: users[idx] };
-  },
-
-  deleteUser(id: string): { success: boolean; message: string } {
-    const currentUser = this.getCurrentUser();
-    if (currentUser.id === id) {
-      return { success: false, message: 'Tidak dapat menghapus akun yang sedang Anda gunakan.' };
-    }
-
+  deleteUser(id: string, currentUserId: string): { success: boolean; message: string } {
     let users = this.getUsers();
     const target = users.find((u) => u.id === id);
     if (!target) return { success: false, message: 'Pengguna tidak ditemukan.' };
+
+    if (target.id === currentUserId) {
+      return { success: false, message: 'Tidak dapat menghapus akun yang sedang Anda gunakan.' };
+    }
+
+    if (target.role === 'admin') {
+      const activeAdmins = users.filter((u) => u.role === 'admin' && u.aktif);
+      if (activeAdmins.length <= 1) {
+        return {
+          success: false,
+          message: 'Tidak dapat menghapus akun Admin terakhir. Sistem harus memiliki minimal satu Admin aktif.',
+        };
+      }
+    }
 
     users = users.filter((u) => u.id !== id);
     this.saveUsers(users);
@@ -148,17 +337,131 @@ export const StorageService = {
     return { success: true, message: `Akun ${target.nama} berhasil dihapus.` };
   },
 
-  resetUserPassword(id: string, newPass = 'bunayya2026'): { success: boolean; message: string } {
-    const res = this.updateUser(id, { password: newPass });
-    if (res.success) {
-      this.addLog('RESET_PASSWORD', 'Pengguna', `Mereset kata sandi akun ID: ${id}`);
+  toggleUserStatus(id: string, currentUserId: string): { success: boolean; message: string } {
+    const users = this.getUsers();
+    const idx = users.findIndex((u) => u.id === id);
+    if (idx === -1) return { success: false, message: 'Pengguna tidak ditemukan.' };
+
+    if (users[idx].id === currentUserId) {
+      return { success: false, message: 'Tidak dapat menonaktifkan akun yang sedang aktif Anda gunakan.' };
     }
-    return { success: res.success, message: res.success ? `Password berhasil direset ke: ${newPass}` : res.message };
+
+    users[idx].aktif = !users[idx].aktif;
+    this.saveUsers(users);
+    this.addLog(
+      'UPDATE_STATUS',
+      'Pengguna',
+      `Mengubah status akun ${users[idx].nama} (@${users[idx].username}) menjadi ${users[idx].aktif ? 'Aktif' : 'Non-aktif'}`
+    );
+    return {
+      success: true,
+      message: `Status akun ${users[idx].nama} berhasil diubah menjadi ${users[idx].aktif ? 'Aktif' : 'Non-aktif'}.`,
+    };
+  },
+
+  updateSelfProfile(
+    userId: string,
+    data: {
+      nama: string;
+      jenisKelamin?: JenisKelamin;
+      email: string;
+      telepon: string;
+      nip?: string;
+      avatar?: string;
+    }
+  ): { success: boolean; message: string; user?: User } {
+    const users = this.getUsers();
+    const idx = users.findIndex((u) => u.id === userId);
+    if (idx === -1) return { success: false, message: 'Pengguna tidak ditemukan.' };
+
+    users[idx] = {
+      ...users[idx],
+      nama: bersihkanNama(data.nama),
+      jenisKelamin: data.jenisKelamin || users[idx].jenisKelamin || 'Laki-laki',
+      email: data.email,
+      telepon: data.telepon,
+      nip: data.nip !== undefined ? data.nip : users[idx].nip,
+      avatar: data.avatar || users[idx].avatar,
+    };
+    this.saveUsers(users);
+    setLocal(KEYS.CURRENT_USER, users[idx]);
+    this.addLog('UPDATE_PROFILE', 'Pengguna', `Pengguna memperbarui data profil pribadi: ${users[idx].nama}`);
+    return { success: true, message: 'Profil Anda berhasil diperbarui.', user: users[idx] };
+  },
+
+  async changeSelfPassword(
+    userId: string,
+    oldPass: string,
+    newPass: string
+  ): Promise<{ success: boolean; message: string }> {
+    const users = this.getUsers();
+    const idx = users.findIndex((u) => u.id === userId);
+    if (idx === -1) return { success: false, message: 'Pengguna tidak ditemukan.' };
+
+    const user = users[idx];
+    const isOldValid = await AuthService.verifyPassword(oldPass, user.passwordHash, user.passwordSalt);
+    if (!isOldValid) {
+      return { success: false, message: 'Kata sandi saat ini (lama) tidak sesuai.' };
+    }
+
+    if (!newPass || newPass.length < 8) {
+      return { success: false, message: 'Kata sandi baru minimal harus 8 karakter.' };
+    }
+
+    const newSalt = AuthService.generateSalt();
+    const newHash = await AuthService.hashPassword(newPass, newSalt);
+
+    users[idx] = {
+      ...users[idx],
+      passwordSalt: newSalt,
+      passwordHash: newHash,
+      mustChangePassword: false,
+    };
+    this.saveUsers(users);
+    setLocal(KEYS.CURRENT_USER, users[idx]);
+    this.addLog('CHANGE_PASSWORD', 'Auth', `Pengguna @${user.username} (${user.nama}) memperbarui kata sandi.`);
+    return { success: true, message: 'Kata sandi Anda berhasil diperbarui.' };
+  },
+
+  async forceChangePassword(
+    userId: string,
+    newPass: string
+  ): Promise<{ success: boolean; message: string; user?: User }> {
+    const users = this.getUsers();
+    const idx = users.findIndex((u) => u.id === userId);
+    if (idx === -1) return { success: false, message: 'Pengguna tidak ditemukan.' };
+
+    if (!newPass || newPass.length < 8) {
+      return { success: false, message: 'Kata sandi baru minimal harus 8 karakter.' };
+    }
+
+    const newSalt = AuthService.generateSalt();
+    const newHash = await AuthService.hashPassword(newPass, newSalt);
+
+    users[idx] = {
+      ...users[idx],
+      passwordSalt: newSalt,
+      passwordHash: newHash,
+      mustChangePassword: false,
+    };
+    this.saveUsers(users);
+    setLocal(KEYS.CURRENT_USER, users[idx]);
+    this.addLog(
+      'FIRST_PASSWORD_SET',
+      'Auth',
+      `Pengguna @${users[idx].username} (${users[idx].nama}) menyetel kata sandi personal pertamanya.`
+    );
+    return { success: true, message: 'Kata sandi baru berhasil disimpan.', user: users[idx] };
   },
 
   // School Profile & Branding
   getSekolah(): ProfilSekolah {
+    runPersonelNameMigration();
     const cached = getLocal<ProfilSekolah>(KEYS.SEKOLAH, INITIAL_SEKOLAH);
+    if (cached.kepalaSekolah === 'Dr. H. Ahmad Ridwan, M.Pd.I') {
+      cached.kepalaSekolah = "Sa'id Ramadhan, S.E., M.M., Gr., Al-Hafidz";
+      setLocal(KEYS.SEKOLAH, cached);
+    }
     return cached;
   },
 

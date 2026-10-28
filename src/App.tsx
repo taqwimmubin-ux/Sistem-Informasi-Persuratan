@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storage';
 import { ThemeEngine } from './services/themeEngine';
+import { AuthService } from './services/authService';
 import {
   User,
   SuratMasuk,
@@ -12,6 +13,7 @@ import {
   Notifikasi,
   Prestasi,
 } from './types';
+import { ShieldAlert } from 'lucide-react';
 
 // Components
 import { Header } from './components/common/Header';
@@ -35,10 +37,26 @@ import { SchoolProfileView } from './components/admin/SchoolProfileView';
 import { ActivityLogView } from './components/admin/ActivityLogView';
 import { UserProfileModal } from './components/common/UserProfileModal';
 import { LoginView } from './components/auth/LoginView';
+import { ForceChangePasswordModal } from './components/auth/ForceChangePasswordModal';
+
+const ADMIN_TABS = ['manajemen-user', 'master-data', 'pengaturan-sekolah', 'log-aktivitas'];
 
 export default function App() {
+  // Session check on initial app startup
+  const initialSession = AuthService.validateSession();
+
+  // App Shell & Session State
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => initialSession.isValid);
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState<string | null>(() =>
+    initialSession.expired
+      ? 'Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan masuk kembali.'
+      : null
+  );
+
   // Global Data State
-  const [currentUser, setCurrentUser] = useState<User>(() => StorageService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<User>(
+    () => initialSession.user || StorageService.getCurrentUser()
+  );
   const [allUsers, setAllUsers] = useState<User[]>(() => StorageService.getUsers());
   const [sekolah, setSekolah] = useState<ProfilSekolah>(() => StorageService.getSekolah());
   const [kategoriList, setKategoriList] = useState<KategoriSurat[]>(() => StorageService.getKategori());
@@ -49,8 +67,6 @@ export default function App() {
   const [notifikasiList, setNotifikasiList] = useState<Notifikasi[]>(() => StorageService.getNotifikasi());
   const [logs, setLogs] = useState<LogAktivitas[]>(() => StorageService.getLogs());
 
-  // App Shell & Session State
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => ThemeEngine.getSavedTheme().isDark);
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -84,6 +100,56 @@ export default function App() {
     });
   }, []);
 
+  // Inactivity tracking (30 minutes timeout)
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const handleUserActivity = () => {
+      AuthService.touchSession();
+    };
+
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach((evt) =>
+      window.addEventListener(evt, handleUserActivity, { passive: true })
+    );
+
+    const intervalId = setInterval(() => {
+      const sessionCheck = AuthService.validateSession();
+      if (!sessionCheck.isValid) {
+        AuthService.terminateSession();
+        setIsLoggedIn(false);
+        setSessionExpiredNotice(
+          sessionCheck.expired
+            ? 'Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan masuk kembali.'
+            : 'Sesi Anda telah berakhir. Silakan masuk kembali.'
+        );
+        StorageService.addLog(
+          'LOGOUT',
+          'Auth',
+          `Sesi pengguna @${currentUser.username} (${currentUser.nama}) berakhir otomatis (inaktivitas 30 menit)`
+        );
+      }
+    }, 15000);
+
+    return () => {
+      activityEvents.forEach((evt) =>
+        window.removeEventListener(evt, handleUserActivity)
+      );
+      clearInterval(intervalId);
+    };
+  }, [isLoggedIn, currentUser]);
+
+  // Unauthorized access attempt detection & audit logging
+  useEffect(() => {
+    if (isLoggedIn && ADMIN_TABS.includes(currentTab) && currentUser.role !== 'admin') {
+      StorageService.addLog(
+        'UNAUTHORIZED_ACCESS_ATTEMPT',
+        'Auth',
+        `Percobaan akses tidak berwenang ke modul "${currentTab}" oleh pengguna @${currentUser.username} (${currentUser.nama} - Role: ${currentUser.role})`
+      );
+    }
+  }, [currentTab, currentUser, isLoggedIn]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
@@ -109,19 +175,26 @@ export default function App() {
     showToast(updated.isDark ? 'Mode Gelap diaktifkan.' : 'Mode Terang diaktifkan.');
   };
 
-  const handleUserChange = (newUser: User) => {
-    StorageService.setCurrentUser(newUser);
-    setCurrentUser(newUser);
-    showToast(`Beralih sesi sebagai: ${newUser.nama} (${newUser.jabatan})`);
-  };
-
-  const handleLogout = () => {
-    StorageService.addLog('LOGOUT', 'Auth', `Pengguna ${currentUser.nama} (${currentUser.role}) keluar dari sistem`);
+  const handleLogout = (isAutoExpired = false) => {
+    AuthService.terminateSession();
+    StorageService.addLog(
+      'LOGOUT',
+      'Auth',
+      isAutoExpired
+        ? `Sesi berakhir otomatis (tidak aktif 30 menit): ${currentUser.nama}`
+        : `Pengguna ${currentUser.nama} (${currentUser.role}) keluar dari sistem`
+    );
     setIsLoggedIn(false);
+    setSessionExpiredNotice(
+      isAutoExpired
+        ? 'Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan masuk kembali.'
+        : null
+    );
     showToast('Anda telah keluar dari sistem.');
   };
 
   const handleLoginSuccess = (user: User) => {
+    setSessionExpiredNotice(null);
     setCurrentUser(user);
     setIsLoggedIn(true);
     refreshAll();
@@ -146,7 +219,6 @@ export default function App() {
     showToast(res.message);
   };
 
-  // Disposisi Handlers
   const handleSavedDisposisi = (disp: Disposisi) => {
     refreshAll();
     showToast(`Lembar disposisi berhasil diterbitkan ke ${disp.tujuan.length} penerima.`);
@@ -164,25 +236,27 @@ export default function App() {
     showToast(res.message);
   };
 
-  // If user logged out, show dedicated Login screen
+  // Mandatory Login Gate: If no active session, show Login screen
   if (!isLoggedIn) {
     return (
       <LoginView
         sekolah={sekolah}
-        allUsers={allUsers}
         onLoginSuccess={handleLoginSuccess}
         isDarkMode={isDarkMode}
         onToggleDarkMode={handleToggleDarkMode}
+        sessionExpiredNotice={sessionExpiredNotice}
       />
     );
   }
+
+  const isRestrictedTab = ADMIN_TABS.includes(currentTab) && currentUser.role !== 'admin';
 
   return (
     <div className="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       {/* Toast Notification */}
       {toastMessage && (
         <div
-          className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-semibold animate-in fade-in slide-in-from-bottom-3 border"
+          className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-semibold animate-in fade-in slide-from-bottom-3 border"
           style={{ borderColor: 'var(--theme-primary)' }}
         >
           <span
@@ -192,6 +266,17 @@ export default function App() {
           <span>{toastMessage}</span>
         </div>
       )}
+
+      {/* Mandatory First-Time Password Change Modal */}
+      <ForceChangePasswordModal
+        isOpen={isLoggedIn && !!currentUser.mustChangePassword}
+        currentUser={currentUser}
+        onPasswordChanged={(updated) => {
+          setCurrentUser(updated);
+          refreshAll();
+          showToast('Kata sandi personal Anda berhasil disimpan!');
+        }}
+      />
 
       {/* Sidebar Navigation */}
       <Sidebar
@@ -212,7 +297,7 @@ export default function App() {
         {/* Top Header */}
         <Header
           currentUser={currentUser}
-          onUserChange={handleUserChange}
+          onUserChange={() => {}}
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
           onOpenProfileModal={() => setIsProfileModalOpen(true)}
           onResetData={handleResetData}
@@ -222,130 +307,158 @@ export default function App() {
           onNavigate={(tab) => setCurrentTab(tab)}
           isDarkMode={isDarkMode}
           onToggleDarkMode={handleToggleDarkMode}
-          onLogout={handleLogout}
+          onLogout={() => handleLogout(false)}
         />
 
         {/* View Router - Only ONE single Beranda / Dashboard */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {currentTab === 'dashboard' && (
-            <DashboardView
-              currentUser={currentUser}
-              suratMasukList={suratMasukList}
-              suratKeluarList={suratKeluarList}
-              disposisiList={disposisiList}
-              onNavigate={(tab) => setCurrentTab(tab)}
-              onOpenCreateSuratMasuk={() => {
-                setEditingSuratMasuk(null);
-                setIsCreateSuratMasukOpen(true);
-              }}
-              onOpenCreateSuratKeluar={() => {
-                setEditingSuratKeluar(null);
-                setIsCreateSuratKeluarOpen(true);
-              }}
-              onSelectSuratMasuk={(s) => setSelectedSuratMasukForDetail(s)}
-              onSelectSuratKeluar={(s) => setSelectedSuratKeluarForDetail(s)}
-            />
-          )}
+          {/* Unauthorized Access Denied Banner */}
+          {isRestrictedTab ? (
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-rose-200 dark:border-rose-900 shadow-sm text-center max-w-lg mx-auto my-12 animate-in fade-in zoom-in-95">
+              <div className="w-16 h-16 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4">
+                <ShieldAlert className="w-8 h-8" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Akses Ditolak (Unauthorized)
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                Anda tidak memiliki wewenang untuk membuka modul konfigurasi atau manajemen sistem ini.
+                Modul ini dikhususkan untuk Administrator Tata Usaha.
+              </p>
+              <div className="mt-6">
+                <button
+                  onClick={() => setCurrentTab('dashboard')}
+                  className="px-5 py-2.5 rounded-xl text-white text-xs font-bold shadow-md cursor-pointer hover:opacity-95"
+                  style={{ backgroundColor: 'var(--theme-primary)' }}
+                >
+                  Kembali ke Dashboard Beranda
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {currentTab === 'dashboard' && (
+                <DashboardView
+                  currentUser={currentUser}
+                  sekolah={sekolah}
+                  suratMasukList={suratMasukList}
+                  suratKeluarList={suratKeluarList}
+                  disposisiList={disposisiList}
+                  onNavigate={(tab) => setCurrentTab(tab)}
+                  onOpenCreateSuratMasuk={() => {
+                    setEditingSuratMasuk(null);
+                    setIsCreateSuratMasukOpen(true);
+                  }}
+                  onOpenCreateSuratKeluar={() => {
+                    setEditingSuratKeluar(null);
+                    setIsCreateSuratKeluarOpen(true);
+                  }}
+                  onSelectSuratMasuk={(s) => setSelectedSuratMasukForDetail(s)}
+                  onSelectSuratKeluar={(s) => setSelectedSuratKeluarForDetail(s)}
+                />
+              )}
 
-          {currentTab === 'surat-masuk' && (
-            <SuratMasukList
-              suratMasukList={suratMasukList}
-              kategoriList={kategoriList}
-              currentUser={currentUser}
-              disposisiList={disposisiList}
-              onOpenCreateModal={() => {
-                setEditingSuratMasuk(null);
-                setIsCreateSuratMasukOpen(true);
-              }}
-              onSelectSurat={(s) => setSelectedSuratMasukForDetail(s)}
-              onEditSurat={(s) => {
-                setEditingSuratMasuk(s);
-                setIsCreateSuratMasukOpen(true);
-              }}
-              onDeleteSurat={handleDeleteSuratMasuk}
-              onOpenDisposisiModal={(s) => setSelectedSuratForDisposisi(s)}
-              onOpenPrintDisposisi={(s, disp) =>
-                setPrintDisposisiTarget({ surat: s, disp })
-              }
-            />
-          )}
+              {currentTab === 'surat-masuk' && (
+                <SuratMasukList
+                  suratMasukList={suratMasukList}
+                  kategoriList={kategoriList}
+                  currentUser={currentUser}
+                  disposisiList={disposisiList}
+                  onOpenCreateModal={() => {
+                    setEditingSuratMasuk(null);
+                    setIsCreateSuratMasukOpen(true);
+                  }}
+                  onSelectSurat={(s) => setSelectedSuratMasukForDetail(s)}
+                  onEditSurat={(s) => {
+                    setEditingSuratMasuk(s);
+                    setIsCreateSuratMasukOpen(true);
+                  }}
+                  onDeleteSurat={handleDeleteSuratMasuk}
+                  onOpenDisposisiModal={(s) => setSelectedSuratForDisposisi(s)}
+                  onOpenPrintDisposisi={(s, disp) =>
+                    setPrintDisposisiTarget({ surat: s, disp })
+                  }
+                />
+              )}
 
-          {currentTab === 'disposisi-saya' && (
-            <DisposisiListView
-              disposisiList={disposisiList}
-              suratMasukList={suratMasukList}
-              currentUser={currentUser}
-              onOpenPrintDisposisi={(s, disp) =>
-                setPrintDisposisiTarget({ surat: s, disp })
-              }
-              onRefresh={refreshAll}
-            />
-          )}
+              {currentTab === 'disposisi-saya' && (
+                <DisposisiListView
+                  disposisiList={disposisiList}
+                  suratMasukList={suratMasukList}
+                  currentUser={currentUser}
+                  onOpenPrintDisposisi={(s, disp) =>
+                    setPrintDisposisiTarget({ surat: s, disp })
+                  }
+                  onRefresh={refreshAll}
+                />
+              )}
 
-          {currentTab === 'surat-keluar' && (
-            <SuratKeluarList
-              suratKeluarList={suratKeluarList}
-              kategoriList={kategoriList}
-              currentUser={currentUser}
-              onOpenCreateModal={() => {
-                setEditingSuratKeluar(null);
-                setIsCreateSuratKeluarOpen(true);
-              }}
-              onSelectSurat={(s) => setSelectedSuratKeluarForDetail(s)}
-              onEditSurat={(s) => {
-                setEditingSuratKeluar(s);
-                setIsCreateSuratKeluarOpen(true);
-              }}
-              onDeleteSurat={handleDeleteSuratKeluar}
-              onOpenPrint={(s) => setSelectedSuratKeluarForPrint(s)}
-            />
-          )}
+              {currentTab === 'surat-keluar' && (
+                <SuratKeluarList
+                  suratKeluarList={suratKeluarList}
+                  kategoriList={kategoriList}
+                  currentUser={currentUser}
+                  onOpenCreateModal={() => {
+                    setEditingSuratKeluar(null);
+                    setIsCreateSuratKeluarOpen(true);
+                  }}
+                  onSelectSurat={(s) => setSelectedSuratKeluarForDetail(s)}
+                  onEditSurat={(s) => {
+                    setEditingSuratKeluar(s);
+                    setIsCreateSuratKeluarOpen(true);
+                  }}
+                  onDeleteSurat={handleDeleteSuratKeluar}
+                  onOpenPrint={(s) => setSelectedSuratKeluarForPrint(s)}
+                />
+              )}
 
-          {currentTab === 'laporan' && (
-            <LaporanView
-              suratMasukList={suratMasukList}
-              suratKeluarList={suratKeluarList}
-              kategoriList={kategoriList}
-              sekolah={sekolah}
-            />
-          )}
+              {currentTab === 'laporan' && (
+                <LaporanView
+                  suratMasukList={suratMasukList}
+                  suratKeluarList={suratKeluarList}
+                  kategoriList={kategoriList}
+                  sekolah={sekolah}
+                />
+              )}
 
-          {currentTab === 'profil-prestasi' && (
-            <ProfilPrestasiView
-              prestasiList={prestasiList}
-              sekolah={sekolah}
-              currentUser={currentUser}
-              onRefresh={refreshAll}
-              onNavigateToSettings={() => setCurrentTab('pengaturan-sekolah')}
-            />
-          )}
+              {currentTab === 'profil-prestasi' && (
+                <ProfilPrestasiView
+                  prestasiList={prestasiList}
+                  sekolah={sekolah}
+                  currentUser={currentUser}
+                  onRefresh={refreshAll}
+                  onNavigateToSettings={() => setCurrentTab('pengaturan-sekolah')}
+                />
+              )}
 
-          {currentTab === 'manajemen-user' && currentUser.role === 'admin' && (
-            <UserManagementView
-              users={allUsers}
-              currentUser={currentUser}
-              onRefresh={refreshAll}
-            />
-          )}
+              {currentTab === 'manajemen-user' && currentUser.role === 'admin' && (
+                <UserManagementView
+                  users={allUsers}
+                  currentUser={currentUser}
+                  onRefresh={refreshAll}
+                />
+              )}
 
-          {currentTab === 'master-data' && currentUser.role === 'admin' && (
-            <MasterDataView
-              kategoriList={kategoriList}
-              sekolah={sekolah}
-              onRefresh={refreshAll}
-            />
-          )}
+              {currentTab === 'master-data' && currentUser.role === 'admin' && (
+                <MasterDataView
+                  kategoriList={kategoriList}
+                  sekolah={sekolah}
+                  onRefresh={refreshAll}
+                />
+              )}
 
-          {currentTab === 'pengaturan-sekolah' && currentUser.role === 'admin' && (
-            <SchoolProfileView
-              sekolah={sekolah}
-              onRefresh={refreshAll}
-              onThemeChanged={refreshAll}
-            />
-          )}
+              {currentTab === 'pengaturan-sekolah' && currentUser.role === 'admin' && (
+                <SchoolProfileView
+                  sekolah={sekolah}
+                  onRefresh={refreshAll}
+                  onThemeChanged={refreshAll}
+                />
+              )}
 
-          {currentTab === 'log-aktivitas' && currentUser.role === 'admin' && (
-            <ActivityLogView logs={logs} />
+              {currentTab === 'log-aktivitas' && currentUser.role === 'admin' && (
+                <ActivityLogView logs={logs} />
+              )}
+            </>
           )}
         </main>
       </div>

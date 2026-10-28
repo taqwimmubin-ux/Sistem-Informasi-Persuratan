@@ -14,10 +14,13 @@ import {
   Eye,
   ShieldAlert,
 } from 'lucide-react';
-import { SuratMasuk, SuratKeluar, Disposisi, User } from '../../types';
+import { SuratMasuk, SuratKeluar, Disposisi, User, ProfilSekolah } from '../../types';
+import { formatNamaPanggilan } from '../../utils/userUtils';
+import { BannerWatermarkLogo } from '../common/BannerWatermarkLogo';
 
 interface DashboardViewProps {
   currentUser: User;
+  sekolah?: ProfilSekolah;
   suratMasukList: SuratMasuk[];
   suratKeluarList: SuratKeluar[];
   disposisiList: Disposisi[];
@@ -30,6 +33,7 @@ interface DashboardViewProps {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   currentUser,
+  sekolah,
   suratMasukList,
   suratKeluarList,
   disposisiList,
@@ -114,11 +118,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>•</span>
             <span>Sistem Informasi Persuratan Terpadu</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Ahlan wa Sahlan, {currentUser.nama}
-          </h1>
-          <p className="mt-2 text-sm text-emerald-100/90 leading-relaxed max-w-2xl">
-            Selamat datang di E-Surat SMPIT Bunayya. Kelola surat masuk, disposisi instruksi dinas, dan pengesahan surat keluar dengan tertib, transparan, dan terarsip digital.
+          {/* Sapaan Ahlan wa Sahlan Tulisan Arab & Nama Lengkap Otomatis */}
+          <div className="space-y-1 mb-2">
+            <div
+              lang="ar"
+              dir="rtl"
+              className="text-2xl sm:text-3xl md:text-4xl text-amber-200 dark:text-amber-300 font-normal drop-shadow-sm font-arabic inline-block select-none"
+              style={{ fontFamily: "'Aref Ruqaa', 'Amiri', 'Traditional Arabic', serif" }}
+            >
+              أَهْلًا وَسَهْلًا
+            </div>
+            <h1
+              className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white tracking-tight break-words leading-tight"
+              title={formatNamaPanggilan(currentUser)}
+            >
+              {formatNamaPanggilan(currentUser)}
+            </h1>
+          </div>
+          <p className="mt-2 text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-2xl break-words">
+            Selamat datang di Aplikasi E-Surat Keluar & Masuk Sekolah Model SMPIT Bunayya. Kelola surat masuk, disposisi instruksi dinas, dan pengesahan surat keluar dengan tertib, transparan, dan terarsip digital.
           </p>
 
           {/* Quick Action Buttons */}
@@ -181,12 +199,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Decorative background Islamic geometry / crescent hint */}
-        <div className="absolute right-0 top-0 bottom-0 w-96 opacity-10 pointer-events-none flex items-center justify-center">
-          <svg viewBox="0 0 200 200" className="w-80 h-80 fill-current text-white">
-            <polygon points="100,10 120,70 180,80 135,120 150,180 100,145 50,180 65,120 20,80 80,70" />
-          </svg>
-        </div>
+        {/* Ilustrasi Garis (Line-Art) Tema Persuratan Digital SMPIT Bunayya */}
+        <BannerWatermarkLogo />
       </div>
 
       {/* Metric Cards Grid */}

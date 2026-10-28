@@ -31,99 +31,99 @@ export interface ActiveThemeConfig {
 export const THEME_PRESETS: ThemePreset[] = [
   {
     id: 'emerald',
-    name: 'Hijau Zamrud Bunayya',
-    primary: '#059669',
-    primaryHover: '#047857',
-    primaryLight: '#ecfdf5',
-    primaryDark: '#064e3b',
-    sidebarStart: '#0f172a',
-    sidebarMid: '#064e3b',
-    sidebarEnd: '#022c22',
-    description: 'Nuansa Islami resmi khas SMPIT Bunayya (Hijau Zaitun Zamrud)',
+    name: 'Hijau Zamrud & Sage Mewah',
+    primary: '#2F6F5E',
+    primaryHover: '#23574A',
+    primaryLight: '#E8F1ED',
+    primaryDark: '#1B4036',
+    sidebarStart: '#111E1A',
+    sidebarMid: '#1A332C',
+    sidebarEnd: '#13241F',
+    description: 'Nuansa Islami modern, tenang, dan prestisius khas SMPIT Bunayya',
   },
   {
     id: 'blue',
-    name: 'Biru Laut Samudra',
-    primary: '#2563eb',
-    primaryHover: '#1d4ed8',
-    primaryLight: '#eff6ff',
-    primaryDark: '#1e3a8a',
-    sidebarStart: '#0f172a',
-    sidebarMid: '#1e3a8a',
-    sidebarEnd: '#172554',
-    description: 'Karakter kedinasan formal, terpercaya, dan modern',
+    name: 'Biru Safir Ningrat',
+    primary: '#275270',
+    primaryHover: '#1D3F57',
+    primaryLight: '#EAF1F5',
+    primaryDark: '#142C3D',
+    sidebarStart: '#0F1722',
+    sidebarMid: '#162838',
+    sidebarEnd: '#0F1C28',
+    description: 'Karakter kedinasan formal, terpercaya, dan tenang berwibawa',
   },
   {
     id: 'teal',
-    name: 'Teal Bahari Modern',
-    primary: '#0d9488',
-    primaryHover: '#0f766e',
-    primaryLight: '#f0fdfa',
-    primaryDark: '#134e4a',
-    sidebarStart: '#0f172a',
-    sidebarMid: '#115e59',
-    sidebarEnd: '#042f2e',
-    description: 'Perpaduan segar hijau toska dan biru laut berwibawa',
+    name: 'Teal Bahari Berwibawa',
+    primary: '#236E67',
+    primaryHover: '#19554F',
+    primaryLight: '#E7F2F1',
+    primaryDark: '#133F3B',
+    sidebarStart: '#0E1D1B',
+    sidebarMid: '#173633',
+    sidebarEnd: '#102422',
+    description: 'Perpaduan segar toska alami dan hijau laut dalam',
   },
   {
     id: 'purple',
-    name: 'Ungu Royalti Kesultanan',
-    primary: '#7c3aed',
-    primaryHover: '#6d28d9',
-    primaryLight: '#f5f3ff',
-    primaryDark: '#4c1d95',
-    sidebarStart: '#0f172a',
-    sidebarMid: '#4c1d95',
-    sidebarEnd: '#2e1065',
-    description: 'Elegan, terpelajar, dan prestisius untuk lingkungan akademik',
+    name: 'Ungu Kastil Kesultanan',
+    primary: '#5B4B70',
+    primaryHover: '#463957',
+    primaryLight: '#EFEBF4',
+    primaryDark: '#352B42',
+    sidebarStart: '#17141C',
+    sidebarMid: '#2B2335',
+    sidebarEnd: '#1D1724',
+    description: 'Elegan, teduh, terpelajar, dan prestisius untuk lingkungan akademik',
   },
   {
     id: 'amber',
-    name: 'Cokelat Kayu Manis',
-    primary: '#b45309',
-    primaryHover: '#92400e',
-    primaryLight: '#fffbeb',
-    primaryDark: '#78350f',
-    sidebarStart: '#1c1917',
-    sidebarMid: '#451a03',
-    sidebarEnd: '#291e13',
-    description: 'Hangat, klasik pesantren modern, dan bersahaja',
+    name: 'Cokelat Kayu Cendana',
+    primary: '#855A36',
+    primaryHover: '#69462A',
+    primaryLight: '#F5ECE3',
+    primaryDark: '#4A311D',
+    sidebarStart: '#1E1712',
+    sidebarMid: '#38271B',
+    sidebarEnd: '#241911',
+    description: 'Hangat, klasik pesantren modern bertaraf internasional',
   },
   {
     id: 'maroon',
-    name: 'Merah Marun Kehormatan',
-    primary: '#b91c1c',
-    primaryHover: '#991b1b',
-    primaryLight: '#fef2f2',
-    primaryDark: '#7f1d1d',
-    sidebarStart: '#18181b',
-    sidebarMid: '#7f1d1d',
-    sidebarEnd: '#450a0a',
-    description: 'Tegas, berani, dan berdisiplin tinggi',
+    name: 'Merah Marun Beludru',
+    primary: '#823737',
+    primaryHover: '#662B2B',
+    primaryLight: '#F5EAEB',
+    primaryDark: '#4B2020',
+    sidebarStart: '#1E1313',
+    sidebarMid: '#3A1E1E',
+    sidebarEnd: '#251313',
+    description: 'Tegas, bersahaja, berkarakter mulia, dan berdisiplin tinggi',
   },
   {
     id: 'orange',
-    name: 'Oranye Surya Senja',
-    primary: '#ea580c',
-    primaryHover: '#c2410c',
-    primaryLight: '#fff7ed',
-    primaryDark: '#7c2d12',
-    sidebarStart: '#18181b',
-    sidebarMid: '#7c2d12',
-    sidebarEnd: '#431407',
-    description: 'Dinamis, penuh energi positif, dan ramah',
+    name: 'Karamel Senja Keemasan',
+    primary: '#9C5828',
+    primaryHover: '#7C451F',
+    primaryLight: '#F7EDE6',
+    primaryDark: '#563016',
+    sidebarStart: '#1F150F',
+    sidebarMid: '#3B2314',
+    sidebarEnd: '#26160C',
+    description: 'Dinamis, penuh kehangatan, positif, dan ramah',
   },
   {
     id: 'slate',
-    name: 'Abu-abu Gelap Minimalis',
-    primary: '#475569',
-    primaryHover: '#334155',
-    primaryLight: '#f8fafc',
-    primaryDark: '#1e293b',
-    sidebarStart: '#090d16',
-    sidebarMid: '#1e293b',
-    sidebarEnd: '#0f172a',
-    description: 'Monokromatik modern, netral, dan fokus tinggi',
+    name: 'Abu Arang Keperakan',
+    primary: '#435359',
+    primaryHover: '#334045',
+    primaryLight: '#EBF0F2',
+    primaryDark: '#232D30',
+    sidebarStart: '#101518',
+    sidebarMid: '#20292E',
+    sidebarEnd: '#141A1D',
+    description: 'Monokromatik mewah, netral, seimbang, dan fokus tinggi',
   },
 ];
 
@@ -233,15 +233,31 @@ export const ThemeEngine = {
     root.style.setProperty('--theme-sidebar-mid', config.sidebarMid);
     root.style.setProperty('--theme-sidebar-end', config.sidebarEnd);
 
+    // Emas Champagne Lembut (#C9A96A) sebagai aksen tetap mewah
+    root.style.setProperty('--theme-accent-gold', '#C9A96A');
+    root.style.setProperty('--theme-accent-gold-light', '#F7F2E7');
+    root.style.setProperty('--theme-accent-gold-dark', '#9B7E3E');
+    root.style.setProperty('--theme-accent-gold-rgb', '201, 169, 106');
+
     // Primary RGB for Tailwind alpha transparency
     const { r, g, b } = hexToRgb(config.primaryColor);
     root.style.setProperty('--theme-primary-rgb', `${r}, ${g}, ${b}`);
 
-    // Toggle Dark Mode Class
+    // Toggle Dark Mode Class & Palet Spesifik
     if (config.isDark) {
       root.classList.add('dark');
+      root.style.setProperty('--app-bg', '#0F1A17'); // Hijau-arang kebiruan lembut
+      root.style.setProperty('--app-card-bg', '#15231F');
+      root.style.setProperty('--app-card-border', '#243A32');
+      root.style.setProperty('--app-text-primary', '#F7F5F0');
+      root.style.setProperty('--app-text-secondary', '#BAC9C2');
     } else {
       root.classList.remove('dark');
+      root.style.setProperty('--app-bg', '#FAF8F4'); // Krem / putih gading hangat
+      root.style.setProperty('--app-card-bg', '#FFFFFF');
+      root.style.setProperty('--app-card-border', 'rgba(47, 111, 94, 0.12)');
+      root.style.setProperty('--app-text-primary', '#1B2D27');
+      root.style.setProperty('--app-text-secondary', '#52665F');
     }
 
     // Set data attribute for semantic targeting
