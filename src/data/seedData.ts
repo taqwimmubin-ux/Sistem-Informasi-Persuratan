@@ -11,7 +11,7 @@ import {
 } from '../types';
 
 export const INITIAL_SEKOLAH: ProfilSekolah = {
-  namaSekolah: 'SMP ISLAM TERPADU BUNAYYA',
+  namaSekolah: 'Sekolah Model SMPIT BUNAYYA',
   yayasan: 'YAYASAN BUNAYYA BINA INSANI',
   npsn: '69982310',
   nss: '202026501124',
@@ -28,7 +28,7 @@ export const INITIAL_SEKOLAH: ProfilSekolah = {
   kepalaSekolah: "Sa'id Ramadhan, S.E., M.M., Gr., Al-Hafidz",
   nipKepalaSekolah: '19780512 200501 1 004',
   formatNomorSuratKeluar: '{nomor}/SMPIT-BNY/{romawi}/{tahun}',
-  logoUrl: '', // Kosong = memakai Logo SVG default SMPIT Bunayya
+  logoUrl: '/logo-bunayya.png',
   temaWarna: 'emerald',
   sejarah:
     'SMPIT Bunayya didirikan pada tahun 2012 di bawah naungan Yayasan Bunayya Bina Insani dengan tekad melahirkan generasi qur’ani yang kokoh dalam akidah, unggul dalam sains dan teknologi, serta berakhlak mulia. Sejak awal berdirinya, SMPIT Bunayya konsisten memadukan kurikulum nasional merdeka belajar dengan kurikulum kekhasan Islam Terpadu dan program unggulan tahfidz Al-Qur’an bersanad.',

@@ -106,6 +106,47 @@ function runPersonelNameMigration(): void {
 // Run migration immediately upon loading
 runPersonelNameMigration();
 
+const SEKOLAH_MIGRATION_KEY = 'bny_migration_v7_sekolah_model_bunayya';
+
+// Migration to enforce official school name "Sekolah Model SMPIT BUNAYYA" & official logo
+function runSchoolModelMigration(): void {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    const migrated = localStorage.getItem(SEKOLAH_MIGRATION_KEY);
+    if (migrated === 'v7_done') return;
+
+    const raw = localStorage.getItem(KEYS.SEKOLAH);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        let modified = false;
+        if (
+          !parsed.namaSekolah ||
+          parsed.namaSekolah === 'SMP ISLAM TERPADU BUNAYYA' ||
+          parsed.namaSekolah === 'SMPIT BUNAYYA'
+        ) {
+          parsed.namaSekolah = 'Sekolah Model SMPIT BUNAYYA';
+          modified = true;
+        }
+        if (!parsed.logoUrl || parsed.logoUrl.includes('AP8AAADGCAMAAAAqo6ad')) {
+          parsed.logoUrl = '/logo-bunayya.png';
+          modified = true;
+        }
+        if (modified) {
+          localStorage.setItem(KEYS.SEKOLAH, JSON.stringify(parsed));
+        }
+      } catch {
+        // ignore
+      }
+    }
+    localStorage.setItem(SEKOLAH_MIGRATION_KEY, 'v7_done');
+  } catch (err) {
+    console.error('Error running school model migration:', err);
+  }
+}
+
+runSchoolModelMigration();
+
 const AUTH_MIGRATION_KEY = 'bny_migration_v6_gender_sapaan_2026';
 
 // Automatic Auth, Clean Names & Gender Migration (v6)
@@ -457,9 +498,30 @@ export const StorageService = {
   // School Profile & Branding
   getSekolah(): ProfilSekolah {
     runPersonelNameMigration();
+    runSchoolModelMigration();
     const cached = getLocal<ProfilSekolah>(KEYS.SEKOLAH, INITIAL_SEKOLAH);
+    let modified = false;
+
+    if (
+      !cached.namaSekolah ||
+      cached.namaSekolah === 'SMP ISLAM TERPADU BUNAYYA' ||
+      cached.namaSekolah === 'SMPIT BUNAYYA'
+    ) {
+      cached.namaSekolah = 'Sekolah Model SMPIT BUNAYYA';
+      modified = true;
+    }
+
+    if (!cached.logoUrl || cached.logoUrl.includes('AP8AAADGCAMAAAAqo6ad')) {
+      cached.logoUrl = '/logo-bunayya.png';
+      modified = true;
+    }
+
     if (cached.kepalaSekolah === 'Dr. H. Ahmad Ridwan, M.Pd.I') {
       cached.kepalaSekolah = "Sa'id Ramadhan, S.E., M.M., Gr., Al-Hafidz";
+      modified = true;
+    }
+
+    if (modified) {
       setLocal(KEYS.SEKOLAH, cached);
     }
     return cached;
@@ -470,7 +532,7 @@ export const StorageService = {
     try {
       // Check if there is an indexedDB stored high-res logo
       const idbLogo = await IndexedDBStorage.getItem('school_logo_base64');
-      if (idbLogo && idbLogo !== cached.logoUrl) {
+      if (idbLogo && idbLogo !== cached.logoUrl && !idbLogo.includes('AP8AAADGCAMAAAAqo6ad')) {
         cached.logoUrl = idbLogo;
         setLocal(KEYS.SEKOLAH, cached);
       }

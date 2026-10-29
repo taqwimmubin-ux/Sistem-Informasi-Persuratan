@@ -10,7 +10,7 @@ import {
   Moon,
   Clock,
 } from 'lucide-react';
-import { Logo } from '../common/Logo';
+import { Logo, OFFICIAL_BUNAYYA_LOGO } from '../common/Logo';
 import { User, ProfilSekolah } from '../../types';
 import { StorageService } from '../../services/storage';
 import { AuthService } from '../../services/authService';
@@ -168,17 +168,40 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <div className="text-center space-y-3">
           <div className="flex justify-center">
             <div className="p-3 bg-white dark:bg-[#15231F] rounded-3xl border border-stone-200/90 dark:border-[#243A32] shadow-xl ring-4 ring-[var(--theme-accent-gold)]/20 transition-transform duration-300 hover:scale-[1.02]">
-              <Logo
-                size="xl"
-                showText={false}
-                customLogoUrl={sekolah.logoUrl}
-                namaSekolah={sekolah.namaSekolah}
-              />
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-white flex items-center justify-center p-1 shadow-xs border border-slate-200/60 dark:border-white/10">
+                <img
+                  src={
+                    sekolah.logoUrl &&
+                    sekolah.logoUrl.trim() !== '' &&
+                    !sekolah.logoUrl.includes('AP8AAADGCAMAAAAqo6ad')
+                      ? sekolah.logoUrl
+                      : OFFICIAL_BUNAYYA_LOGO
+                  }
+                  alt={
+                    sekolah.namaSekolah &&
+                    sekolah.namaSekolah !== 'SMP ISLAM TERPADU BUNAYYA' &&
+                    sekolah.namaSekolah !== 'SMPIT BUNAYYA'
+                      ? sekolah.namaSekolah
+                      : 'Sekolah Model SMPIT BUNAYYA'
+                  }
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const img = e.currentTarget;
+                    if (img.src !== OFFICIAL_BUNAYYA_LOGO) {
+                      img.src = OFFICIAL_BUNAYYA_LOGO;
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight font-serif-luxury">
-              {sekolah.namaSekolah}
+              {sekolah.namaSekolah &&
+              sekolah.namaSekolah !== 'SMP ISLAM TERPADU BUNAYYA' &&
+              sekolah.namaSekolah !== 'SMPIT BUNAYYA'
+                ? sekolah.namaSekolah
+                : 'Sekolah Model SMPIT BUNAYYA'}
             </h1>
             <p className="text-xs text-stone-500 dark:text-stone-400 font-medium mt-1">
               Sistem Informasi Persuratan Digital • E-Surat & Disposisi
@@ -292,7 +315,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
         {/* Footer info */}
         <p className="text-center text-[10px] text-slate-400 dark:text-slate-500">
-          SMPIT Bunayya • Sistem Informasi Tata Usaha & Kearsipan Surat Digital
+          Sekolah Model SMPIT BUNAYYA • Sistem Informasi Tata Usaha & Kearsipan Surat Digital
         </p>
       </div>
     </div>
