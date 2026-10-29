@@ -30,6 +30,7 @@ import {
   generateCustomTheme,
 } from '../../services/themeEngine';
 import { compressAndValidateLogo } from '../../services/imageCompression';
+import { OFFICIAL_BUNAYYA_LOGO } from '../common/Logo';
 
 interface SchoolProfileViewProps {
   sekolah: ProfilSekolah;
@@ -354,19 +355,11 @@ export const SchoolProfileView: React.FC<SchoolProfileViewProps> = ({
           <div className="flex flex-col sm:flex-row items-center gap-5">
             {/* Logo Preview Square */}
             <div className="w-28 h-28 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 flex items-center justify-center p-2.5 shadow-xs overflow-hidden shrink-0 relative group">
-              {logoPreview ? (
-                <img
-                  src={logoPreview}
-                  alt="Pratinjau Logo Sekolah"
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="text-center p-2 text-slate-400">
-                  <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-60" />
-                  <span className="text-[10px] block font-semibold">Lambang Bawaan</span>
-                  <span className="text-[8px] block opacity-80">(Emblem Bunayya)</span>
-                </div>
-              )}
+              <img
+                src={logoPreview || OFFICIAL_BUNAYYA_LOGO}
+                alt="Pratinjau Logo Sekolah"
+                className="w-full h-full object-contain"
+              />
 
               {isCompressingLogo && (
                 <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center text-white">

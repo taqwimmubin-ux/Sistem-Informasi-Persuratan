@@ -165,21 +165,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
       <div className="w-full max-w-md space-y-6">
         {/* Brand & Emblem Card */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3">
           <div className="flex justify-center">
-            <Logo
-              size="xl"
-              showText={false}
-              customLogoUrl={sekolah.logoUrl}
-              namaSekolah={sekolah.namaSekolah}
-            />
+            <div className="p-3 bg-white dark:bg-[#15231F] rounded-3xl border border-stone-200/90 dark:border-[#243A32] shadow-xl ring-4 ring-[var(--theme-accent-gold)]/20 transition-transform duration-300 hover:scale-[1.02]">
+              <Logo
+                size="xl"
+                showText={false}
+                customLogoUrl={sekolah.logoUrl}
+                namaSekolah={sekolah.namaSekolah}
+              />
+            </div>
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight font-serif-luxury">
               {sekolah.namaSekolah}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-              Sistem Informasi Persuratan Digital (E-Surat & Disposisi)
+            <p className="text-xs text-stone-500 dark:text-stone-400 font-medium mt-1">
+              Sistem Informasi Persuratan Digital • E-Surat & Disposisi
             </p>
           </div>
         </div>
